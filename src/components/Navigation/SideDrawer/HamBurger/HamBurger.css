@@ -1,0 +1,21 @@
+.HamBurger {
+	height: 100%;
+	width: 40px;
+}
+
+.HamBurger div {
+	border: 2px solid white;
+}
+
+.HamBurger div:nth-child(2) {
+	margin-top: 8px;
+}
+.HamBurger div:nth-child(3) {
+	margin-top: 8px;
+}
+
+@media (min-width: 500px) {
+	.HamBurger {
+		display: none;
+	}
+}
