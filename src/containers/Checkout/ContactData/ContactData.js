@@ -7,8 +7,6 @@ import Input from "../../../components/UI/Input/Input";
 import { connect } from "react-redux";
 class ContactData extends Component {
 	state = {
-		ingredients: null,
-		totalPrice: 0,
 		orderForm: {
 			name: {
 				elementType: "input",
