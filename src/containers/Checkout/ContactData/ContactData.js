@@ -4,7 +4,8 @@ import classes from "./ContactData.css";
 import axios from "../../../axios-orders";
 import Spinner from "../../../components/UI/Spinner/Spinner";
 import Input from "../../../components/UI/Input/Input";
-export default class ContactData extends Component {
+import { connect } from "react-redux";
+class ContactData extends Component {
 	state = {
 		ingredients: null,
 		totalPrice: 0,
@@ -31,6 +32,7 @@ export default class ContactData extends Component {
 				value: "",
 				validation: {
 					required: true,
+					isEmail: false,
 				},
 				valid: false,
 				touched: false,
@@ -82,7 +84,7 @@ export default class ContactData extends Component {
 
 	componentDidMount() {
 		this.setState({
-			ingredients: this.props.ingredients,
+			ingredients: this.props.ings,
 			totalPrice: this.props.price,
 		});
 	}
@@ -101,8 +103,8 @@ export default class ContactData extends Component {
 
 		let order = {
 			customer: formData,
-			ingredients: this.state.ingredients,
-			totalPrice: this.state.totalPrice.toFixed(2).toString(),
+			ingredients: this.props.ings,
+			totalPrice: this.props.totalPrice.toFixed(2).toString(),
 		};
 
 		axios
@@ -142,6 +144,15 @@ export default class ContactData extends Component {
 
 		if (rules.maxLength) {
 			isValid = value.length <= rules.minLength && isValid;
+		}
+		/* 		if (rules.isEmail) {
+			const patterm = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9]/;
+			isValid = pattern.test(value) && isValid;
+		} */
+
+		if (rules.isNumeric) {
+			const pattern = /^\d+$/;
+			isValid = pattern.test(value) && isValid;
 		}
 
 		return isValid;
@@ -251,3 +262,12 @@ export default class ContactData extends Component {
 		return <div className={classes.ContactData}>{form}</div>;
 	}
 }
+
+const mapStateToProps = (state) => {
+	return {
+		ings: state.ingredients,
+		totalPrice: state.totalPrice,
+	};
+};
+
+export default connect(mapStateToProps)(ContactData);
