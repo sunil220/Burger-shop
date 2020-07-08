@@ -5,6 +5,8 @@ import axios from "../../../axios-orders";
 import Spinner from "../../../components/UI/Spinner/Spinner";
 import Input from "../../../components/UI/Input/Input";
 import { connect } from "react-redux";
+import withErrorHandler from "../../../hoc/withErrorHandler/withErrorHandler";
+import * as actions from "../../../store/actions/index";
 class ContactData extends Component {
 	state = {
 		orderForm: {
@@ -59,6 +61,7 @@ class ContactData extends Component {
 					required: true,
 					minLength: 6,
 					maxLength: 6,
+					isNumeric: true,
 				},
 				valid: false,
 				touched: false,
@@ -76,19 +79,13 @@ class ContactData extends Component {
 				valid: true,
 			},
 		},
-		loading: false,
+
 		formIsValid: false,
 	};
 
-	componentDidMount() {
-		this.setState({
-			ingredients: this.props.ings,
-			totalPrice: this.props.price,
-		});
-	}
+	componentDidMount() {}
 
 	orderHandler = (event) => {
-		this.setState({ loading: true });
 		event.preventDefault();
 
 		const formData = {};
@@ -105,19 +102,7 @@ class ContactData extends Component {
 			totalPrice: this.props.totalPrice.toFixed(2).toString(),
 		};
 
-		axios
-			.post(
-				"https://composed-amulet-263513.firebaseio.com/orders.json",
-				order
-			)
-			.then((response) => {
-				this.setState({ loading: false });
-
-				this.props.history.push("/");
-			})
-			.catch((error) => {
-				this.setState({ loading: false });
-			});
+		this.props.onOrderBurger(order);
 	};
 
 	checkValidity = (value, rules) => {
@@ -140,13 +125,10 @@ class ContactData extends Component {
 			isValid = value.length >= rules.minLength && isValid;
 		}
 
-		if (rules.maxLength) {
-			isValid = value.length <= rules.minLength && isValid;
-		}
-		/* 		if (rules.isEmail) {
-			const patterm = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9]/;
+		if (rules.isEmail) {
+			const pattern = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
 			isValid = pattern.test(value) && isValid;
-		} */
+		}
 
 		if (rules.isNumeric) {
 			const pattern = /^\d+$/;
@@ -254,7 +236,7 @@ class ContactData extends Component {
 			</div>
 		);
 
-		if (this.state.loading) {
+		if (this.props.loading) {
 			form = <Spinner />;
 		}
 		return <div className={classes.ContactData}>{form}</div>;
@@ -263,9 +245,20 @@ class ContactData extends Component {
 
 const mapStateToProps = (state) => {
 	return {
-		ings: state.ingredients,
-		totalPrice: state.totalPrice,
+		ings: state.burgerBuilder.ingredients,
+		totalPrice: state.burgerBuilder.totalPrice,
+		loading: state.order.loading,
 	};
 };
 
-export default connect(mapStateToProps)(ContactData);
+const mapDispatchToProps = (dispatch) => {
+	return {
+		onOrderBurger: (orderData) =>
+			dispatch(actions.purchaseBurger(orderData)),
+	};
+};
+
+export default connect(
+	mapStateToProps,
+	mapDispatchToProps
+)(withErrorHandler(ContactData, axios));
