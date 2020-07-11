@@ -7,6 +7,8 @@ import Input from "../../../components/UI/Input/Input";
 import { connect } from "react-redux";
 import withErrorHandler from "../../../hoc/withErrorHandler/withErrorHandler";
 import * as actions from "../../../store/actions/index";
+import { updateObject, checkValidity } from "../../../shared/utility";
+
 class ContactData extends Component {
 	state = {
 		orderForm: {
@@ -83,8 +85,6 @@ class ContactData extends Component {
 		formIsValid: false,
 	};
 
-	componentDidMount() {}
-
 	orderHandler = (event) => {
 		event.preventDefault();
 
@@ -100,73 +100,28 @@ class ContactData extends Component {
 			customer: formData,
 			ingredients: this.props.ings,
 			totalPrice: this.props.totalPrice.toFixed(2).toString(),
+			userId: this.props.userId,
 		};
 
-		this.props.onOrderBurger(order);
-	};
-
-	checkValidity = (value, rules) => {
-		let isValid = true;
-
-		/* 		if ( rules )
-		{
-			All rules which doesn't have validation property it won't check
-		} */
-
-		if (!rules) {
-			return true;
-		}
-
-		if (rules.required) {
-			isValid = value.trim() !== "" && isValid;
-		}
-
-		if (rules.minLength) {
-			isValid = value.length >= rules.minLength && isValid;
-		}
-
-		if (rules.isEmail) {
-			const pattern = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
-			isValid = pattern.test(value) && isValid;
-		}
-
-		if (rules.isNumeric) {
-			const pattern = /^\d+$/;
-			isValid = pattern.test(value) && isValid;
-		}
-
-		return isValid;
+		this.props.onOrderBurger(order, this.props.token);
 	};
 
 	inputChangedHandler = (event, inputIdentifier) => {
-		const updatedOrderForm = {
-			...this.state.orderForm,
-		};
-		/* 	{
-			name: {...
-			},
-			email: {...
-			},
-			....
-		} */
-		const updatedFormElement = {
-			...updatedOrderForm[inputIdentifier],
-		};
-		/*  {elementType: "input",
-				
-				value: "",}
-        */
-		updatedFormElement.value = event.target.value;
-		//console.log(updatedFormElement);
-
-		updatedFormElement.valid = this.checkValidity(
-			updatedFormElement.value,
-			updatedFormElement.validation
+		const updatedFormElement = updateObject(
+			this.state.orderForm[inputIdentifier],
+			{
+				value: event.target.value,
+				valid: checkValidity(
+					event.target.value,
+					this.state.orderForm[inputIdentifier].validation
+				),
+				touched: true,
+			}
 		);
 
-		updatedFormElement.touched = true;
-
-		updatedOrderForm[inputIdentifier] = updatedFormElement;
+		const updatedOrderForm = updateObject(this.state.orderForm, {
+			[inputIdentifier]: updatedFormElement,
+		});
 
 		let formIsValid = true;
 
@@ -190,23 +145,6 @@ class ContactData extends Component {
 				config: this.state.orderForm[key],
 			});
 		}
-		// console.log(formElementsArray)
-		/* (5) [{…}, {…}, {…}, {…}, {…}]
-		>0: id: "name"
-			>config:
-				>elementConfig:
-					placeholder: "Your Name"
-					type: "text"
-				>__proto__: Object
-				elementType: "input"
-				value: ""
-			
-		__proto__: Object
-		>1: {id: "email", config: {…}}
-		>2: {id: "street", config: {…}}
-		>3: {id: "Zip", config: {…}}
-		>4: {id: "deliveryMethod", config: {…}}
-		length: 5 */
 
 		let form = (
 			<div>
@@ -248,13 +186,15 @@ const mapStateToProps = (state) => {
 		ings: state.burgerBuilder.ingredients,
 		totalPrice: state.burgerBuilder.totalPrice,
 		loading: state.order.loading,
+		token: state.auth.token,
+		userId: state.auth.userId,
 	};
 };
 
 const mapDispatchToProps = (dispatch) => {
 	return {
-		onOrderBurger: (orderData) =>
-			dispatch(actions.purchaseBurger(orderData)),
+		onOrderBurger: (orderData, token) =>
+			dispatch(actions.purchaseBurger(orderData, token)),
 	};
 };
 

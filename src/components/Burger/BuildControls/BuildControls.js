@@ -33,7 +33,7 @@ export default function buildControls(props) {
 				disabled={!props.purchasable}
 				onClick={props.ordered}
 			>
-				CheckOut
+				{props.isAuth ? "CheckOut" : "Sign Up To Order"}
 			</button>
 		</div>
 	);
